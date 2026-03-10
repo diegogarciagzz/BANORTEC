@@ -12,9 +12,31 @@ export default function App() {
   return (
     <div className="app">
       <Header />
+
       <main className="dashboard">
-        <ExpensesChart />
-        <StocksPanel />
+        {/* Row 1: Expenses + Greeting Card */}
+        <div className="dashboard-row">
+          <ExpensesChart />
+          <div className="card info-card">
+            <h2 className="greeting">¡Hola Ricardo!</h2>
+            <p className="info-text">
+              Tus gastos recurrentes han aumentado <strong>$214.67</strong>
+            </p>
+            <button className="btn-action">Revisar sugerencias &gt;&gt;</button>
+          </div>
+        </div>
+
+        {/* Row 2: Stocks + Investment Info */}
+        <div className="dashboard-row">
+          <StocksPanel />
+          <div className="card info-card">
+            <p className="info-text-lg">
+              Has recibido <strong>$5,008.32</strong> de tus inversiones en los
+              últimos 15 días
+            </p>
+            <button className="btn-action">Reinvertir &gt;&gt;</button>
+          </div>
+        </div>
       </main>
 
       {!chatOpen && (

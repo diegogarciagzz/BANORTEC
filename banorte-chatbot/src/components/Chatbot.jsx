@@ -4,16 +4,16 @@ import { X, Send } from "lucide-react";
 const OLLAMA_URL = "http://localhost:11434/api/chat";
 const MODEL = "llama3";
 
-const SYSTEM_PROMPT = `Eres IAgente, el asistente virtual de Banorte.
+const SYSTEM_PROMPT = `Eres Aura, el asistente virtual inteligente de Banorte.
 Ayudas a los clientes con consultas sobre sus cuentas bancarias, gastos, inversiones y servicios financieros.
-Responde siempre en español, de forma clara y concisa.`;
+Responde siempre en español, de forma clara y concisa. Eres amigable y profesional.`;
 
 export default function Chatbot({ open, onClose }) {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
       content:
-        "¡Hola! Soy tu IAgente de Banorte. ¿En qué puedo ayudarte hoy?",
+        "¡Hola! Soy Aura, tu asistente virtual de Banorte. ¿En qué puedo ayudarte hoy?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -88,7 +88,7 @@ export default function Chatbot({ open, onClose }) {
           <button className="chatbot-close" onClick={onClose}>
             <X size={20} />
           </button>
-          <span className="chatbot-title">Habla con tu IAgente</span>
+          <span className="chatbot-title">Habla con Aura</span>
         </div>
 
         <div className="chatbot-messages">

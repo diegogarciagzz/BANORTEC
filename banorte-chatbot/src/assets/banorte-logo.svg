@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 120" fill="#EC0029">
+  <!-- Banorte "B" icon with two ellipses -->
+  <ellipse cx="62" cy="38" rx="52" ry="28" transform="rotate(-15 62 38)"/>
+  <ellipse cx="52" cy="78" rx="52" ry="28" transform="rotate(-15 52 78)"/>
+  <!-- Triangular accent -->
+  <polygon points="18,100 30,55 42,100"/>
+  <!-- BANORTE text -->
+  <text x="140" y="90" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="88" letter-spacing="6">BANORTE</text>
+</svg>

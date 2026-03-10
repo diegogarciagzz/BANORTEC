@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   AreaChart,
   Area,
@@ -5,14 +6,15 @@ import {
   YAxis,
   ResponsiveContainer,
   Tooltip,
+  CartesianGrid,
 } from "recharts";
 import { ExternalLink } from "lucide-react";
 
 const stocks = [
-  { ticker: "NVDA", name: "NVDA Corporat...", price: 185.34, change: "+1.47%", color: "#3B5BDB", positive: true },
-  { ticker: "CNC", name: "Centene Corpo...", price: 37.54, change: "-13.34%", color: "#EC0029", positive: false },
-  { ticker: "AADR", name: "AdvisorShares...", price: 89.67, change: "+5.71%", color: "#FCC419", positive: true },
-  { ticker: "ALSEA", name: "Alsea, S.A.B...", price: 56.92, change: "+8.73%", color: "#20C997", positive: true },
+  { ticker: "NVDA", key: "nvda", name: "NVDA Corporat...", price: 185.34, change: "+1.47%", color: "#3B5BDB", positive: true },
+  { ticker: "CNC", key: "cnc", name: "Centene Corpo...", price: 37.54, change: "-13.34%", color: "#EC0029", positive: false },
+  { ticker: "AADR", key: "aadr", name: "AdvisorShares...", price: 89.67, change: "+5.71%", color: "#FCC419", positive: true },
+  { ticker: "ALSEA", key: "alsea", name: "Alsea, S.A.B...", price: 56.92, change: "+8.73%", color: "#20C997", positive: true },
 ];
 
 const chartData = [
@@ -26,14 +28,37 @@ const chartData = [
   alsea: 10 + Math.sin(i * 1.2) * 6 + i * 1,
 }));
 
+function CustomTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="stock-tooltip">
+      <p className="stock-tooltip-label">{label}</p>
+      {payload.map((p) => (
+        <div key={p.dataKey} className="stock-tooltip-row">
+          <span className="stock-tooltip-dot" style={{ background: p.stroke }} />
+          <span>{p.dataKey.toUpperCase()}</span>
+          <span className="stock-tooltip-val">{p.value.toFixed(1)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function StocksPanel() {
+  const [highlighted, setHighlighted] = useState(null);
+
   return (
     <div className="card stocks-card">
       <div className="stocks-layout">
         <div className="stocks-left">
           <div className="stocks-list">
             {stocks.map((s) => (
-              <div key={s.ticker} className="stock-row">
+              <div
+                key={s.ticker}
+                className={`stock-row ${highlighted === s.key ? "stock-row-active" : ""}`}
+                onMouseEnter={() => setHighlighted(s.key)}
+                onMouseLeave={() => setHighlighted(null)}
+              >
                 <span className="stock-dot" style={{ backgroundColor: s.color }} />
                 <div className="stock-info">
                   <span className="stock-ticker">{s.ticker}</span>
@@ -54,33 +79,32 @@ export default function StocksPanel() {
           <div className="stocks-chart-header">
             <ExternalLink size={14} color="#999" />
           </div>
-          <ResponsiveContainer width="100%" height={180}>
+          <ResponsiveContainer width="100%" height={190}>
             <AreaChart data={chartData}>
               <defs>
-                <linearGradient id="gNvda" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3B5BDB" stopOpacity={0.25} />
-                  <stop offset="100%" stopColor="#3B5BDB" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="gCnc" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#EC0029" stopOpacity={0.2} />
-                  <stop offset="100%" stopColor="#EC0029" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="gAadr" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#FCC419" stopOpacity={0.25} />
-                  <stop offset="100%" stopColor="#FCC419" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="gAlsea" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#20C997" stopOpacity={0.2} />
-                  <stop offset="100%" stopColor="#20C997" stopOpacity={0} />
-                </linearGradient>
+                {stocks.map((s) => (
+                  <linearGradient key={s.key} id={`g-${s.key}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={s.color} stopOpacity={0.3} />
+                    <stop offset="100%" stopColor={s.color} stopOpacity={0} />
+                  </linearGradient>
+                ))}
               </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#999" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: "#999" }} axisLine={false} tickLine={false} />
-              <Tooltip />
-              <Area type="monotone" dataKey="nvda" stroke="#3B5BDB" fill="url(#gNvda)" strokeWidth={2} />
-              <Area type="monotone" dataKey="cnc" stroke="#EC0029" fill="url(#gCnc)" strokeWidth={1.5} />
-              <Area type="monotone" dataKey="aadr" stroke="#FCC419" fill="url(#gAadr)" strokeWidth={1.5} />
-              <Area type="monotone" dataKey="alsea" stroke="#20C997" fill="url(#gAlsea)" strokeWidth={1.5} />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#ddd", strokeDasharray: "4 4" }} />
+              {stocks.map((s) => (
+                <Area
+                  key={s.key}
+                  type="monotone"
+                  dataKey={s.key}
+                  stroke={s.color}
+                  fill={`url(#g-${s.key})`}
+                  strokeWidth={highlighted === s.key ? 3.5 : highlighted ? 1 : 2}
+                  fillOpacity={highlighted === s.key ? 1 : highlighted ? 0.15 : 0.6}
+                  style={{ transition: "all 0.3s ease" }}
+                />
+              ))}
             </AreaChart>
           </ResponsiveContainer>
         </div>

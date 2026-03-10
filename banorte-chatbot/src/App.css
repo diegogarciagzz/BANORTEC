@@ -109,6 +109,12 @@ body {
   border-radius: 20px;
   padding: 28px;
   box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 /* ── Info Card (right column) ── */
@@ -188,6 +194,16 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 10px;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.legend-row:hover,
+.legend-row.legend-active {
+  background: #f8f8fa;
+  transform: scale(1.03);
 }
 
 .legend-bar {
@@ -259,6 +275,16 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 12px;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.stock-row:hover,
+.stock-row.stock-row-active {
+  background: #f8f8fa;
+  transform: translateX(4px);
 }
 
 .stock-dot {
@@ -511,6 +537,75 @@ body {
 
 .chatbot-send:not(:disabled):hover {
   background: #c70022;
+}
+
+/* ── Bubble entrance animation ── */
+.bubble-enter {
+  animation: bubbleIn 0.3s ease-out;
+}
+
+@keyframes bubbleIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Streaming cursor blink ── */
+.cursor-blink {
+  display: inline-block;
+  width: 2px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  margin-left: 3px;
+  vertical-align: text-bottom;
+  animation: blink 0.8s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ── Custom Stock Tooltip ── */
+.stock-tooltip {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+}
+
+.stock-tooltip-label {
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.stock-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  color: #555;
+}
+
+.stock-tooltip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stock-tooltip-val {
+  margin-left: auto;
+  font-weight: 700;
+  color: #1a1a1a;
 }
 
 /* ── Responsive chatbot ── */

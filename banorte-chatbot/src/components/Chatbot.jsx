@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { X, Send } from "lucide-react";
 
 const OLLAMA_URL = "http://localhost:11434/api/chat";
@@ -18,11 +18,17 @@ export default function Chatbot({ open, onClose }) {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
   const messagesEndRef = useRef(null);
+  const abortRef = useRef(null);
+
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    scrollToBottom();
+  }, [messages, streamingText, scrollToBottom]);
 
   const sendMessage = async () => {
     const text = input.trim();
@@ -33,6 +39,10 @@ export default function Chatbot({ open, onClose }) {
     setMessages(updatedMessages);
     setInput("");
     setLoading(true);
+    setStreamingText("");
+
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     try {
       const res = await fetch(OLLAMA_URL, {
@@ -47,18 +57,46 @@ export default function Chatbot({ open, onClose }) {
               content: m.content,
             })),
           ],
-          stream: false,
+          stream: true,
         }),
+        signal: controller.signal,
       });
 
       if (!res.ok) throw new Error("Error al conectar con Ollama");
 
-      const data = await res.json();
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n").filter(Boolean);
+
+        for (const line of lines) {
+          try {
+            const json = JSON.parse(line);
+            if (json.message?.content) {
+              accumulated += json.message.content;
+              setStreamingText(accumulated);
+            }
+          } catch {
+            // skip malformed JSON chunks
+          }
+        }
+      }
+
+      // Streaming done — commit the full message
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: data.message.content },
+        { role: "assistant", content: accumulated },
       ]);
-    } catch {
+      setStreamingText("");
+    } catch (err) {
+      if (err.name === "AbortError") return;
+      setStreamingText("");
       setMessages((prev) => [
         ...prev,
         {
@@ -69,6 +107,7 @@ export default function Chatbot({ open, onClose }) {
       ]);
     } finally {
       setLoading(false);
+      abortRef.current = null;
     }
   };
 
@@ -95,13 +134,23 @@ export default function Chatbot({ open, onClose }) {
           {messages.map((msg, i) => (
             <div
               key={i}
-              className={`chat-bubble ${msg.role === "user" ? "user" : "bot"}`}
+              className={`chat-bubble ${msg.role === "user" ? "user" : "bot"} bubble-enter`}
             >
               {msg.content}
             </div>
           ))}
-          {loading && (
-            <div className="chat-bubble bot">
+
+          {/* Streaming bubble — shows text token by token */}
+          {loading && streamingText && (
+            <div className="chat-bubble bot bubble-enter">
+              {streamingText}
+              <span className="cursor-blink" />
+            </div>
+          )}
+
+          {/* Typing dots — only when waiting for first token */}
+          {loading && !streamingText && (
+            <div className="chat-bubble bot bubble-enter">
               <span className="typing-indicator">
                 <span />
                 <span />
@@ -109,6 +158,7 @@ export default function Chatbot({ open, onClose }) {
               </span>
             </div>
           )}
+
           <div ref={messagesEndRef} />
         </div>
 

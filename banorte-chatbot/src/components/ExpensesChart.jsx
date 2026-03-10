@@ -1,8 +1,9 @@
+import { useState, useCallback } from "react";
 import {
   PieChart,
   Pie,
   Cell,
-  Tooltip,
+  Sector,
   ResponsiveContainer,
   Label,
 } from "recharts";
@@ -15,12 +16,45 @@ const data = [
   { name: "Ahorro", value: 5, pct: "93%", color: "#FCC419" },
 ];
 
+function ActiveShape(props) {
+  const {
+    cx, cy, innerRadius, outerRadius, startAngle, endAngle,
+    fill, payload, value,
+  } = props;
+
+  return (
+    <g>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius - 4}
+        outerRadius={outerRadius + 8}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.18))", transition: "all 0.3s ease" }}
+      />
+      <text x={cx} y={cy - 8} textAnchor="middle" fill="#1a1a1a" fontSize={18} fontWeight={800}>
+        {value}%
+      </text>
+      <text x={cx} y={cy + 14} textAnchor="middle" fill="#888" fontSize={12} fontWeight={500}>
+        {payload.name}
+      </text>
+    </g>
+  );
+}
+
 export default function ExpensesChart() {
+  const [activeIndex, setActiveIndex] = useState(-1);
+
+  const onEnter = useCallback((_, index) => setActiveIndex(index), []);
+  const onLeave = useCallback(() => setActiveIndex(-1), []);
+
   return (
     <div className="card expenses-card">
       <div className="expenses-layout">
         <div className="expenses-chart-area">
-          <ResponsiveContainer width="100%" height={240}>
+          <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
                 data={data}
@@ -31,31 +65,48 @@ export default function ExpensesChart() {
                 dataKey="value"
                 stroke="none"
                 paddingAngle={2}
+                activeIndex={activeIndex}
+                activeShape={ActiveShape}
+                onMouseEnter={onEnter}
+                onMouseLeave={onLeave}
               >
                 {data.map((entry, index) => (
-                  <Cell key={index} fill={entry.color} />
+                  <Cell
+                    key={index}
+                    fill={entry.color}
+                    style={{ cursor: "pointer", transition: "opacity 0.3s" }}
+                    opacity={activeIndex === -1 || activeIndex === index ? 1 : 0.4}
+                  />
                 ))}
-                <Label
-                  value="Gastos"
-                  position="centerBottom"
-                  dy={-4}
-                  style={{ fontSize: "13px", fill: "#888", fontWeight: 500 }}
-                />
-                <Label
-                  value="del Mes"
-                  position="centerTop"
-                  dy={10}
-                  style={{ fontSize: "13px", fill: "#888", fontWeight: 500 }}
-                />
+                {activeIndex === -1 && (
+                  <>
+                    <Label
+                      value="Gastos"
+                      position="centerBottom"
+                      dy={-4}
+                      style={{ fontSize: "13px", fill: "#888", fontWeight: 500 }}
+                    />
+                    <Label
+                      value="del Mes"
+                      position="centerTop"
+                      dy={10}
+                      style={{ fontSize: "13px", fill: "#888", fontWeight: 500 }}
+                    />
+                  </>
+                )}
               </Pie>
-              <Tooltip formatter={(value) => `${value}%`} />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
         <div className="expenses-legend">
-          {data.map((item) => (
-            <div key={item.name} className="legend-row">
+          {data.map((item, i) => (
+            <div
+              key={item.name}
+              className={`legend-row ${activeIndex === i ? "legend-active" : ""}`}
+              onMouseEnter={() => setActiveIndex(i)}
+              onMouseLeave={() => setActiveIndex(-1)}
+            >
               <span
                 className="legend-bar"
                 style={{ backgroundColor: item.color }}
